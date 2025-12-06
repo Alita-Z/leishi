@@ -1,11 +1,10 @@
 import os
-import json
 import asyncio
 from typing import AsyncGenerator, List, Dict
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import openai

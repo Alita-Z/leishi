@@ -18,11 +18,11 @@ pip install -r requirements.txt
 
 ### 配置API密钥（可选）
 
-复制 [.env.example](.env.example) 文件为 `.env` 并填入你的 OpenAI API 密钥：
+复制 [.env.example](.env.example) 文件为 `.env` 并填入你的相关配置信息：
 
 ```bash
 cp .env.example .env
-# 然后编辑 .env 文件填入你的API密钥
+# 然后编辑 .env 文件填入你的相关配置信息
 ```
 
 如果不配置模型相关信息，系统会使用模拟数据进行演示。
