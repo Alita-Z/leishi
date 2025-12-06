@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职能沟通翻译助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #4361ee;
+            color: white;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mode-selector {
+            margin-bottom: 20px;
+        }
+
+        .mode-selector h3 {
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mode-btn {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .mode-btn.active {
+            background-color: #4361ee;
+            color: white;
+            border-color: #4361ee;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+        }
+
+        .chat-history {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f0f2f5;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            animation: fadeIn 0.3s ease-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .user-message {
+            background-color: #4361ee;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .assistant-message {
+            background-color: #e4e6eb;
+            color: #000;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-content {
+            line-height: 1.5;
+        }
+
+        .message-content h1,
+        .message-content h2,
+        .message-content h3 {
+            margin: 10px 0;
+        }
+
+        .message-content p {
+            margin-bottom: 10px;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .message-content pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .message-content code {
+            background-color: #e0e0e0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .message-content pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .message-content strong {
+            font-weight: bold;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .input-area {
+            padding: 16px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 24px;
+            resize: none;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            min-height: 48px;
+            max-height: 200px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #4361ee;
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .action-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background-color: #4361ee;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .action-button:hover:not(:disabled) {
+            background-color: #3a56e4;
+            transform: scale(1.05);
+        }
+
+        .action-button:disabled {
+            background-color: #b0b0b0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-button.stop {
+            background-color: #e63946;
+            border-radius: 12px;
+        }
+
+        .action-button.stop:hover {
+            background-color: #d62828;
+        }
+
+
+        /* Alert modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #333;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .confirm-button {
+            background-color: #4361ee;
+            color: white;
+        }
+
+        .confirm-button:hover {
+            background-color: #3a56e4;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .mode-buttons {
+                flex-direction: row;
+            }
+            
+            .mode-btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>职能沟通翻译助手</h1>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="mode-selector">
+                <h3>翻译模式</h3>
+                <div class="mode-buttons">
+                    <button id="productToDevBtn" class="mode-btn active" data-direction="product_to_dev">
+                        产品 → 技术
+                    </button>
+                    <button id="devToProductBtn" class="mode-btn" data-direction="dev_to_product">
+                        技术 → 产品
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div id="result" class="chat-history">
+                <div class="message assistant-message">
+                    <div class="message-content">您好！我是职能沟通翻译助手，可以帮助您在产品需求和技术实现之间进行翻译。请选择翻译模式并在下方输入内容开始对话。</div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-group">
+                    <textarea id="inputText" placeholder="请输入需要翻译的内容..."></textarea>
+                    <button id="actionBtn" class="action-button">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>提示</h2>
+                <button class="close-button">&times;</button>
+            </div>
+            <div class="modal-body" id="modalMessage">
+                请输入需要翻译的内容
+            </div>
+            <div class="modal-footer">
+                <button class="modal-button confirm-button">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的Markdown解析函数
+        function parseMarkdown(text) {
+            // 转义HTML特殊字符
+            let parsed = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            // 解析粗体
+            parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // 解析斜体
+            parsed = parsed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // 解析标题
+            parsed = parsed.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+            parsed = parsed.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+            parsed = parsed.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+            
+            // 解析无序列表
+            parsed = parsed.replace(/^\s*-\s(.*)$/gm, '<li>$1</li>');
+            parsed = parsed.replace(/(<li>.*<\/li>)+/gs, '<ul>$&</ul>');
+            
+            // 解析有序列表
+            parsed = parsed.replace(/^\s*\d+\.\s(.*)$/gm, '<li>$1</li>');
+            parsed = parsed.replace(/(<li>.*<\/li>)+/gs, '<ol>$&</ol>');
+            
+            // 解析代码块
+            parsed = parsed.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // 解析行内代码
+            parsed = parsed.replace(/`(.*?)`/g, '<code>$1</code>');
+            
+            // 解析段落
+            parsed = parsed.replace(/\n\n/g, '</p><p>');
+            parsed = parsed.replace(/\n/g, '<br>');
+            parsed = '<p>' + parsed + '</p>';
+            
+            // 清理列表标记
+            parsed = parsed.replace(/<\/ul><ul>/g, '');
+            parsed = parsed.replace(/<\/ol><ol>/g, '');
+            
+            return parsed;
+        }
+
+        // 页面元素
+        const inputText = document.getElementById('inputText');
+        const resultDiv = document.getElementById('result');
+        const actionBtn = document.getElementById('actionBtn');
+        const productToDevBtn = document.getElementById('productToDevBtn');
+        const devToProductBtn = document.getElementById('devToProductBtn');
+        const alertModal = document.getElementById('alertModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeModalButton = document.querySelector('.close-button');
+        const confirmButton = document.querySelector('.confirm-button');
+
+        // 当前翻译方向
+        let currentDirection = 'product_to_dev';
+
+        // 对话历史记录
+        let conversationHistory = [];
+
+        // 控制流式响应的终止
+        let abortController = null;
+
+        // 显示模态框
+        function showAlert(message) {
+            modalMessage.textContent = message;
+            alertModal.style.display = 'flex';
+        }
+
+        // 隐藏模态框
+        function hideAlert() {
+            alertModal.style.display = 'none';
+        }
+
+        // 关闭模态框事件
+        closeModalButton.addEventListener('click', hideAlert);
+        confirmButton.addEventListener('click', hideAlert);
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', (event) => {
+            if (event.target === alertModal) {
+                hideAlert();
+            }
+        });
+
+        // 切换翻译方向
+        productToDevBtn.addEventListener('click', () => {
+            currentDirection = 'product_to_dev';
+            productToDevBtn.classList.add('active');
+            devToProductBtn.classList.remove('active');
+            // 切换方向时清空历史记录
+            conversationHistory = [];
+            resultDiv.innerHTML = `
+                <div class="message assistant-message">
+                    <div class="message-content">您好！我是职能沟通翻译助手，已切换到"产品 → 技术"模式。请在下方输入产品需求，我将为您翻译成技术语言。</div>
+                </div>
+            `;
+        });
+
+        devToProductBtn.addEventListener('click', () => {
+            currentDirection = 'dev_to_product';
+            devToProductBtn.classList.add('active');
+            productToDevBtn.classList.remove('active');
+            // 切换方向时清空历史记录
+            conversationHistory = [];
+            resultDiv.innerHTML = `
+                <div class="message assistant-message">
+                    <div class="message-content">您好！我是职能沟通翻译助手，已切换到"技术 → 产品"模式。请在下方输入技术方案，我将为您翻译成产品语言。</div>
+                </div>
+            `;
+        });
+
+        // 停止对话函数
+        function stopConversation() {
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+            }
+            actionBtn.disabled = false;
+            actionBtn.innerHTML = '➤';
+            actionBtn.classList.remove('stop');
+        }
+
+        // 格式化消息显示
+        function formatMessage(role, content) {
+            const messageClass = role === 'user' ? 'user-message' : 'assistant-message';
+            return `
+                <div class="message ${messageClass}">
+                    <div class="message-content">${parseMarkdown(content)}</div>
+                </div>
+            `;
+        }
+
+        // 更新对话显示
+        function updateConversationDisplay() {
+            let conversationHtml = '';
+            for (let i = 0; i < conversationHistory.length; i += 2) {
+                const userMessage = conversationHistory[i];
+                const assistantMessage = conversationHistory[i + 1];
+                
+                conversationHtml += formatMessage(userMessage.role, userMessage.content);
+                if (assistantMessage) {
+                    conversationHtml += formatMessage(assistantMessage.role, assistantMessage.content);
+                }
+            }
+            resultDiv.innerHTML = conversationHtml;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+
+        // 翻译函数
+        async function translate() {
+            const text = inputText.value.trim();
+            
+            if (!text) {
+                showAlert('请输入需要翻译的内容');
+                return;
+            }
+
+            // 创建新的AbortController用于取消请求
+            abortController = new AbortController();
+            
+            // 显示停止按钮
+            actionBtn.innerHTML = '⏹';
+            actionBtn.classList.add('stop');
+            actionBtn.disabled = false;
+
+            try {
+                // 发送请求到后端
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        direction: currentDirection,
+                        history: conversationHistory
+                    }),
+                    signal: abortController.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // 处理流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let fullResponse = '';
+
+                // 添加用户消息到历史记录并更新显示
+                conversationHistory.push({role: "user", content: text});
+                updateConversationDisplay();
+                
+                // 添加临时助手消息
+                const tempMessageDiv = document.createElement('div');
+                tempMessageDiv.className = 'message assistant-message';
+                tempMessageDiv.innerHTML = '<div class="message-content"></div>';
+                resultDiv.appendChild(tempMessageDiv);
+                const contentDiv = tempMessageDiv.querySelector('.message-content');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    fullResponse += chunk;
+                    contentDiv.innerHTML = parseMarkdown(fullResponse);
+                    
+                    // 滚动到底部
+                    resultDiv.scrollTop = resultDiv.scrollHeight;
+                }
+                
+                // 更新对话历史
+                conversationHistory.push({role: "assistant", content: fullResponse});
+                
+                // 限制历史记录数量，防止过长
+                if (conversationHistory.length > 10) {
+                    conversationHistory = conversationHistory.slice(-10);
+                }
+                
+                // 更新最终显示
+                updateConversationDisplay();
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    // 添加取消消息
+                    const cancelMessageDiv = document.createElement('div');
+                    cancelMessageDiv.className = 'message assistant-message';
+                    cancelMessageDiv.innerHTML = '<div class="message-content"><em>对话已停止</em></div>';
+                    resultDiv.appendChild(cancelMessageDiv);
+                } else {
+                    console.error('Translation error:', error);
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'message assistant-message';
+                    errorMessageDiv.innerHTML = `<div class="message-content"><strong>错误:</strong> 翻译出错，请重试。</div>`;
+                    resultDiv.appendChild(errorMessageDiv);
+                }
+            } finally {
+                // 隐藏停止按钮
+                actionBtn.innerHTML = '➤';
+                actionBtn.classList.remove('stop');
+                actionBtn.disabled = false;
+                abortController = null;
+                inputText.value = '';
+            }
+        }
+
+        // 绑定动作按钮事件
+        actionBtn.addEventListener('click', () => {
+            // 如果是停止状态
+            if (actionBtn.classList.contains('stop')) {
+                stopConversation();
+            } else {
+                // 如果是发送状态
+                translate();
+            }
+        });
+
+        // 支持 Enter 发送消息，Ctrl+Enter 换行
+        inputText.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                if (!actionBtn.classList.contains('stop')) {
+                    translate();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
